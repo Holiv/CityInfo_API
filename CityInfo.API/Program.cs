@@ -1,15 +1,38 @@
 ﻿//As an web application, it need to be hosted
 //Initialize an instance of the WebApplicationBuilder 
-var builder = WebApplication.CreateBuilder(args);
+using CityInfo.API;
+using CityInfo.API.Models.Services;
+using Microsoft.AspNetCore.StaticFiles;
+using Serilog;
 
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console()
+    .WriteTo.File("logs/cityinfo.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog();
 // Add services to the container.
 // Builder is of type WebApplicationBuilder that has Service as a Property
 // Service is of type IServiceCollection thar works as a Container to implement Dependency Injection
 // IServiceCollection is provided with a lot of Extension Methods
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.ReturnHttpNotAcceptable = true;
+}).AddNewtonsoftJson()
+  .AddXmlDataContractSerializerFormatters();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSingleton<FileExtensionContentTypeProvider>();
+builder.Services.AddSingleton<CitiesDataStore>();
+
+#if DEBUG
+builder.Services.AddTransient<IMailService, LocalMailService>();
+#else
+builder.Services.AddTransient<IMailService, CloudMailService>();
+#endif
 
 // After services being added to the WebApplication through Dependency Injection it is build into a WebApplication
 // The WebApplication type implements the IApplicationBuilder interface that provides the mechanisms to configure an application's request pipeline.

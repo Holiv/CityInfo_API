@@ -6,7 +6,10 @@ namespace CityInfo.API
 	public class CitiesDataStore
 	{
 		public List<CityDto> Cities { get; set; }
-		public static CitiesDataStore Current = new CitiesDataStore();
+
+		//a static instance is a singleton instance when using dependency injection
+		//once we start using dependency injection, a static instance is no more needed.
+		//public static CitiesDataStore Current { get; } = new CitiesDataStore();
 
 		public CitiesDataStore()
 		{
